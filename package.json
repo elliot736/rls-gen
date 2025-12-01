@@ -1,0 +1,7 @@
+{
+  "name": "rls-gen",
+  "version": "0.1.0",
+  "description": "PostgreSQL Row-Level Security Policy Generator for multi-tenant applications",
+  "type": "module",
+  "license": "MIT"
+}
