@@ -91,3 +91,11 @@ export function parseConfig(raw: Record<string, unknown>): TenantConfig {
 
   return { tenant: { column: tenant.column, type: tenant.type }, tables, policies, settings };
 }
+
+/**
+ * Parses a YAML string into a validated TenantConfig.
+ */
+export function parseConfigFromYaml(yamlString: string): TenantConfig {
+  const raw = parseYaml(yamlString) as Record<string, unknown>;
+  return parseConfig(raw);
+}
