@@ -65,10 +65,29 @@ export function parseConfig(raw: Record<string, unknown>): TenantConfig {
     }
   );
 
-  return {
-    tenant: { column: tenant.column, type: tenant.type },
-    tables,
-    policies: { default_role: "app_user", force_rls_on_owner: false },
-    settings: { add_indexes: false, warn_missing_tables: false },
+  const rawPolicies = (raw.policies as Record<string, unknown> | undefined) ?? {};
+  const policies: PolicySettings = {
+    default_role:
+      typeof rawPolicies.default_role === "string"
+        ? rawPolicies.default_role
+        : "app_user",
+    force_rls_on_owner:
+      typeof rawPolicies.force_rls_on_owner === "boolean"
+        ? rawPolicies.force_rls_on_owner
+        : false,
   };
+
+  const rawSettings = (raw.settings as Record<string, unknown> | undefined) ?? {};
+  const settings: GeneratorSettings = {
+    add_indexes:
+      typeof rawSettings.add_indexes === "boolean"
+        ? rawSettings.add_indexes
+        : false,
+    warn_missing_tables:
+      typeof rawSettings.warn_missing_tables === "boolean"
+        ? rawSettings.warn_missing_tables
+        : false,
+  };
+
+  return { tenant: { column: tenant.column, type: tenant.type }, tables, policies, settings };
 }
