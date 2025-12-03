@@ -15,3 +15,15 @@ export interface TableConfig {
   tenant_column?: string;
   enable_rls: boolean;
 }
+
+/** Global policy settings. */
+export interface PolicySettings {
+  default_role: string;
+  force_rls_on_owner: boolean;
+}
+
+/** Generator behavior settings. */
+export interface GeneratorSettings {
+  add_indexes: boolean;
+  warn_missing_tables: boolean;
+}
