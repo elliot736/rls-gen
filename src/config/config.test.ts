@@ -60,4 +60,38 @@ describe("parseConfigFromYaml", () => {
     expect(config.settings.add_indexes).toBe(false);
     expect(config.settings.warn_missing_tables).toBe(false);
   });
+
+  it("throws on missing tenant section", () => {
+    const yaml = `
+tables:
+  - name: orders
+    schema: public
+    enable_rls: true
+`;
+    expect(() => parseConfigFromYaml(yaml)).toThrow(/tenant/i);
+  });
+
+  it("throws on missing tenant.column", () => {
+    const yaml = `
+tenant:
+  type: uuid
+tables:
+  - name: orders
+    schema: public
+    enable_rls: true
+`;
+    expect(() => parseConfigFromYaml(yaml)).toThrow(/column/i);
+  });
+
+  it("throws on missing tenant.type", () => {
+    const yaml = `
+tenant:
+  column: tenant_id
+tables:
+  - name: orders
+    schema: public
+    enable_rls: true
+`;
+    expect(() => parseConfigFromYaml(yaml)).toThrow(/type/i);
+  });
 });
