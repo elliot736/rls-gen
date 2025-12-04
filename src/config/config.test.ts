@@ -125,4 +125,42 @@ tables:
 `;
     expect(() => parseConfigFromYaml(yaml)).toThrow(/name/i);
   });
+
+  it("defaults table schema to public if not provided", () => {
+    const yaml = `
+tenant:
+  column: tenant_id
+  type: uuid
+tables:
+  - name: orders
+    enable_rls: true
+`;
+    const config = parseConfigFromYaml(yaml);
+    expect(config.tables[0].schema).toBe("public");
+  });
+
+  it("defaults enable_rls to true if not provided", () => {
+    const yaml = `
+tenant:
+  column: tenant_id
+  type: uuid
+tables:
+  - name: orders
+    schema: public
+`;
+    const config = parseConfigFromYaml(yaml);
+    expect(config.tables[0].enable_rls).toBe(true);
+  });
+});
+
+describe("parseConfig", () => {
+  it("parses a JSON object input", () => {
+    const input = {
+      tenant: { column: "tenant_id", type: "uuid" },
+      tables: [{ name: "orders", schema: "public", enable_rls: true }],
+    };
+    const config = parseConfig(input);
+    expect(config.tenant.column).toBe("tenant_id");
+    expect(config.tables).toHaveLength(1);
+  });
 });
