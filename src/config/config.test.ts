@@ -94,4 +94,35 @@ tables:
 `;
     expect(() => parseConfigFromYaml(yaml)).toThrow(/type/i);
   });
+
+  it("throws on missing tables section", () => {
+    const yaml = `
+tenant:
+  column: tenant_id
+  type: uuid
+`;
+    expect(() => parseConfigFromYaml(yaml)).toThrow(/tables/i);
+  });
+
+  it("throws on empty tables array", () => {
+    const yaml = `
+tenant:
+  column: tenant_id
+  type: uuid
+tables: []
+`;
+    expect(() => parseConfigFromYaml(yaml)).toThrow(/tables/i);
+  });
+
+  it("throws on table missing name", () => {
+    const yaml = `
+tenant:
+  column: tenant_id
+  type: uuid
+tables:
+  - schema: public
+    enable_rls: true
+`;
+    expect(() => parseConfigFromYaml(yaml)).toThrow(/name/i);
+  });
 });
