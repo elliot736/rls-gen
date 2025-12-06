@@ -44,5 +44,15 @@ export function validate(config: TenantConfig): ValidationError[] {
     seen.add(key);
   }
 
+  // Warn about tables with RLS disabled
+  for (const table of config.tables) {
+    if (!table.enable_rls) {
+      errors.push({
+        severity: "warning",
+        message: `Table '${table.schema}.${table.name}' has RLS disabled — it will not be protected`,
+      });
+    }
+  }
+
   return errors;
 }
