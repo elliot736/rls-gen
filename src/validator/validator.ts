@@ -23,5 +23,13 @@ export function validate(config: TenantConfig): ValidationError[] {
     });
   }
 
+  // Check for empty default_role
+  if (!config.policies.default_role) {
+    errors.push({
+      severity: "error",
+      message: "Policy default_role must not be empty",
+    });
+  }
+
   return errors;
 }
