@@ -31,5 +31,18 @@ export function validate(config: TenantConfig): ValidationError[] {
     });
   }
 
+  // Check for duplicate table entries (same schema + name)
+  const seen = new Set<string>();
+  for (const table of config.tables) {
+    const key = `${table.schema}.${table.name}`;
+    if (seen.has(key)) {
+      errors.push({
+        severity: "error",
+        message: `Duplicate table entry: ${key}`,
+      });
+    }
+    seen.add(key);
+  }
+
   return errors;
 }
