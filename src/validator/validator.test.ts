@@ -48,4 +48,26 @@ describe("validate", () => {
     expect(errors.length).toBeGreaterThan(0);
     expect(errors.some((e) => e.message.match(/duplicate/i))).toBe(true);
   });
+
+  it("allows same table name in different schemas", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "public", enable_rls: true },
+        { name: "orders", schema: "sales", enable_rls: true },
+      ],
+    });
+    const errors = validate(config);
+    expect(errors).toHaveLength(0);
+  });
+
+  it("detects policy name conflicts from duplicate schema.table", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "public", enable_rls: true },
+        { name: "orders", schema: "public", enable_rls: true },
+      ],
+    });
+    const errors = validate(config);
+    expect(errors.some((e) => e.message.match(/duplicate/i))).toBe(true);
+  });
 });
