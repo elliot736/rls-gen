@@ -28,4 +28,24 @@ describe("validate", () => {
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].message).toMatch(/type/i);
   });
+
+  it("accepts valid PostgreSQL types: uuid, integer, bigint, text", () => {
+    for (const type of ["uuid", "integer", "bigint", "text"]) {
+      const config = makeConfig({ tenant: { column: "tenant_id", type } });
+      const errors = validate(config);
+      expect(errors).toHaveLength(0);
+    }
+  });
+
+  it("detects duplicate table entries", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "public", enable_rls: true },
+        { name: "orders", schema: "public", enable_rls: true },
+      ],
+    });
+    const errors = validate(config);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.some((e) => e.message.match(/duplicate/i))).toBe(true);
+  });
 });
