@@ -70,4 +70,23 @@ describe("validate", () => {
     const errors = validate(config);
     expect(errors.some((e) => e.message.match(/duplicate/i))).toBe(true);
   });
+
+  it("returns ValidationError objects with severity and message", () => {
+    const config = makeConfig({
+      tenant: { column: "tenant_id", type: "invalid_type" },
+    });
+    const errors = validate(config);
+    expect(errors[0]).toHaveProperty("severity");
+    expect(errors[0]).toHaveProperty("message");
+    expect(["error", "warning"]).toContain(errors[0].severity);
+  });
+
+  it("warns when default_role is empty", () => {
+    const config = makeConfig({
+      policies: { default_role: "", force_rls_on_owner: false },
+    });
+    const errors = validate(config);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.some((e) => e.message.match(/role/i))).toBe(true);
+  });
 });
