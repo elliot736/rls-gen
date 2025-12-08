@@ -89,4 +89,14 @@ describe("validate", () => {
     expect(errors.length).toBeGreaterThan(0);
     expect(errors.some((e) => e.message.match(/role/i))).toBe(true);
   });
+
+  it("warns about tables with enable_rls false", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "public", enable_rls: false },
+      ],
+    });
+    const errors = validate(config);
+    expect(errors.some((e) => e.severity === "warning" && e.message.match(/rls.*disabled/i))).toBe(true);
+  });
 });
