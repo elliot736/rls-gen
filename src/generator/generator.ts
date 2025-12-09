@@ -22,6 +22,13 @@ export function generate(config: TenantConfig): string[] {
     statements.push(
       `ALTER TABLE ${qualifiedName} ENABLE ROW LEVEL SECURITY;`
     );
+
+    // 2. Force RLS on table owner (optional)
+    if (config.policies.force_rls_on_owner) {
+      statements.push(
+        `ALTER TABLE ${qualifiedName} FORCE ROW LEVEL SECURITY;`
+      );
+    }
   }
 
   return statements;
