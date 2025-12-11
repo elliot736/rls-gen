@@ -100,4 +100,36 @@ describe("generate", () => {
       "CREATE POLICY tenant_isolation_orders ON sales.orders TO app_user USING (tenant_id = current_setting('app.current_tenant')::uuid);"
     );
   });
+
+  it("skips tables with enable_rls set to false", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "public", enable_rls: true },
+        { name: "migrations", schema: "public", enable_rls: false },
+      ],
+    });
+    const sql = generate(config);
+    expect(sql.filter((s) => s.includes("migrations"))).toHaveLength(0);
+  });
+
+  it("returns an array of SQL strings", () => {
+    const sql = generate(makeConfig());
+    expect(Array.isArray(sql)).toBe(true);
+    sql.forEach((s) => expect(typeof s).toBe("string"));
+  });
+
+  it("generates statements in correct order: enable, force, policy, index", () => {
+    const config = makeConfig({
+      policies: { default_role: "app_user", force_rls_on_owner: true },
+      settings: { add_indexes: true, warn_missing_tables: false },
+    });
+    const sql = generate(config);
+    const enableIdx = sql.findIndex((s) => s.includes("ENABLE ROW LEVEL SECURITY"));
+    const forceIdx = sql.findIndex((s) => s.includes("FORCE ROW LEVEL SECURITY"));
+    const policyIdx = sql.findIndex((s) => s.startsWith("CREATE POLICY"));
+    const indexIdx = sql.findIndex((s) => s.startsWith("CREATE INDEX"));
+    expect(enableIdx).toBeLessThan(forceIdx);
+    expect(forceIdx).toBeLessThan(policyIdx);
+    expect(policyIdx).toBeLessThan(indexIdx);
+  });
 });
