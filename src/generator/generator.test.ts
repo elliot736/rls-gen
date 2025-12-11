@@ -32,4 +32,18 @@ describe("generate", () => {
     const policyLine = sql.find((s) => s.startsWith("CREATE POLICY"));
     expect(policyLine).toContain("TO app_user");
   });
+
+  it("generates FORCE RLS when force_rls_on_owner is true", () => {
+    const config = makeConfig({
+      policies: { default_role: "app_user", force_rls_on_owner: true },
+    });
+    const sql = generate(config);
+    expect(sql).toContain("ALTER TABLE public.orders FORCE ROW LEVEL SECURITY;");
+  });
+
+  it("does NOT generate FORCE RLS when force_rls_on_owner is false", () => {
+    const sql = generate(makeConfig());
+    const forceStatements = sql.filter((s) => s.includes("FORCE ROW LEVEL SECURITY"));
+    expect(forceStatements).toHaveLength(0);
+  });
 });
