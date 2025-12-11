@@ -74,4 +74,30 @@ describe("generate", () => {
       "CREATE POLICY tenant_isolation_audit_logs ON public.audit_logs TO app_user USING (org_id = current_setting('app.current_tenant')::uuid);"
     );
   });
+
+  it("handles multiple tables", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "public", enable_rls: true },
+        { name: "products", schema: "public", enable_rls: true },
+        { name: "audit_logs", schema: "public", tenant_column: "org_id", enable_rls: true },
+      ],
+    });
+    const sql = generate(config);
+    expect(sql.filter((s) => s.includes("ENABLE ROW LEVEL SECURITY"))).toHaveLength(3);
+    expect(sql.filter((s) => s.startsWith("CREATE POLICY"))).toHaveLength(3);
+  });
+
+  it("handles custom schema names", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "orders", schema: "sales", enable_rls: true },
+      ],
+    });
+    const sql = generate(config);
+    expect(sql).toContain("ALTER TABLE sales.orders ENABLE ROW LEVEL SECURITY;");
+    expect(sql).toContain(
+      "CREATE POLICY tenant_isolation_orders ON sales.orders TO app_user USING (tenant_id = current_setting('app.current_tenant')::uuid);"
+    );
+  });
 });
