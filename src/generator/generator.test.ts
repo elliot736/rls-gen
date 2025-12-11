@@ -46,4 +46,32 @@ describe("generate", () => {
     const forceStatements = sql.filter((s) => s.includes("FORCE ROW LEVEL SECURITY"));
     expect(forceStatements).toHaveLength(0);
   });
+
+  it("generates indexes when add_indexes is true", () => {
+    const config = makeConfig({
+      settings: { add_indexes: true, warn_missing_tables: false },
+    });
+    const sql = generate(config);
+    expect(sql).toContain(
+      "CREATE INDEX IF NOT EXISTS idx_orders_tenant_id ON public.orders(tenant_id);"
+    );
+  });
+
+  it("does NOT generate indexes when add_indexes is false", () => {
+    const sql = generate(makeConfig());
+    const indexStatements = sql.filter((s) => s.includes("CREATE INDEX"));
+    expect(indexStatements).toHaveLength(0);
+  });
+
+  it("uses per-table tenant_column override", () => {
+    const config = makeConfig({
+      tables: [
+        { name: "audit_logs", schema: "public", tenant_column: "org_id", enable_rls: true },
+      ],
+    });
+    const sql = generate(config);
+    expect(sql).toContain(
+      "CREATE POLICY tenant_isolation_audit_logs ON public.audit_logs TO app_user USING (org_id = current_setting('app.current_tenant')::uuid);"
+    );
+  });
 });
