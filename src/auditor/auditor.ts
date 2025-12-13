@@ -29,12 +29,10 @@ function parseTables(schemaSql: string): ParsedTable[] {
     const name = match[2];
     const body = match[3];
 
-    // Extract column names (first word on each comma-separated segment)
     const columns: string[] = [];
     const lines = body.split(",");
     for (const line of lines) {
       const trimmed = line.trim();
-      // Skip constraints (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, CONSTRAINT)
       if (/^(PRIMARY|FOREIGN|UNIQUE|CHECK|CONSTRAINT)\b/i.test(trimmed)) {
         continue;
       }
@@ -68,4 +66,51 @@ function parseIndexes(schemaSql: string): Set<string> {
   }
 
   return indexes;
+}
+
+/**
+ * Audits a SQL schema dump against the tenant config to detect
+ * common RLS pitfalls and potential security issues.
+ *
+ * Returns an array of AuditFinding objects.
+ */
+export function audit(schemaSql: string, config: TenantConfig): AuditFinding[] {
+  const findings: AuditFinding[] = [];
+  const schemaTables = parseTables(schemaSql);
+  const existingIndexes = parseIndexes(schemaSql);
+
+  // Build a set of configured table keys
+  const configuredKeys = new Set(
+    config.tables.map((t) => `${t.schema}.${t.name}`)
+  );
+
+  // 1. Tables in schema not in config
+  if (config.settings.warn_missing_tables) {
+    for (const st of schemaTables) {
+      const key = `${st.schema}.${st.name}`;
+      if (!configuredKeys.has(key)) {
+        findings.push({
+          severity: "warning",
+          rule: "missing-from-config",
+          message: `Table '${key}' exists in schema but is not in the RLS config — it may be missing row-level security`,
+          table: st.name,
+        });
+      }
+    }
+  }
+
+  // 2. Inconsistent tenant column names
+  const defaultCol = config.tenant.column;
+  for (const table of config.tables) {
+    if (table.tenant_column && table.tenant_column !== defaultCol) {
+      findings.push({
+        severity: "warning",
+        rule: "inconsistent-tenant-column",
+        message: `Table '${table.name}' uses tenant column '${table.tenant_column}' instead of the default '${defaultCol}'`,
+        table: table.name,
+      });
+    }
+  }
+
+  return findings;
 }
