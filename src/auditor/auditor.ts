@@ -49,3 +49,23 @@ function parseTables(schemaSql: string): ParsedTable[] {
 
   return tables;
 }
+
+/**
+ * Checks for existing indexes in a SQL schema dump.
+ * Returns a set of "schema.table.column" strings that have indexes.
+ */
+function parseIndexes(schemaSql: string): Set<string> {
+  const indexes = new Set<string>();
+  const indexRegex =
+    /CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\w+\s+ON\s+(?:(\w+)\.)?(\w+)\s*\((\w+)/gi;
+
+  let match: RegExpExecArray | null;
+  while ((match = indexRegex.exec(schemaSql)) !== null) {
+    const schema = match[1] ?? "public";
+    const table = match[2];
+    const column = match[3];
+    indexes.add(`${schema}.${table}.${column}`);
+  }
+
+  return indexes;
+}
