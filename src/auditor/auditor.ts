@@ -112,5 +112,31 @@ export function audit(schemaSql: string, config: TenantConfig): AuditFinding[] {
     }
   }
 
+  // 3. Superuser bypass warning
+  if (!config.policies.force_rls_on_owner) {
+    findings.push({
+      severity: "warning",
+      rule: "superuser-bypass",
+      message:
+        "force_rls_on_owner is disabled — table owners and superusers will bypass RLS policies",
+      table: "*",
+    });
+  }
+
+  // 4. Missing indexes on tenant columns
+  for (const table of config.tables) {
+    if (!table.enable_rls) continue;
+    const tenantCol = table.tenant_column ?? defaultCol;
+    const indexKey = `${table.schema}.${table.name}.${tenantCol}`;
+    if (!existingIndexes.has(indexKey)) {
+      findings.push({
+        severity: "warning",
+        rule: "missing-index",
+        message: `Table '${table.schema}.${table.name}' is missing an index on tenant column '${tenantCol}' — this may cause slow queries`,
+        table: table.name,
+      });
+    }
+  }
+
   return findings;
 }
