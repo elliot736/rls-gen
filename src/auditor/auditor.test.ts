@@ -100,4 +100,26 @@ describe("audit", () => {
     expect(f).toHaveProperty("message");
     expect(f).toHaveProperty("table");
   });
+
+  it("handles schema with no CREATE TABLE statements", () => {
+    const findings = audit("-- empty schema", makeConfig());
+    expect(Array.isArray(findings)).toBe(true);
+  });
+
+  it("parses tables with explicit schema prefix", () => {
+    const schema = `
+CREATE TABLE myapp.users (
+  id uuid PRIMARY KEY,
+  tenant_id uuid NOT NULL
+);
+`;
+    const config = makeConfig({
+      settings: { add_indexes: false, warn_missing_tables: true },
+    });
+    const findings = audit(schema, config);
+    const missing = findings.filter(
+      (f) => f.rule === "missing-from-config" && f.table === "users"
+    );
+    expect(missing.length).toBeGreaterThan(0);
+  });
 });
