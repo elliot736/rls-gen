@@ -81,4 +81,23 @@ describe("audit", () => {
     const bypass = findings.filter((f) => f.rule === "superuser-bypass");
     expect(bypass).toHaveLength(0);
   });
+
+  it("detects missing indexes on tenant columns when add_indexes is false", () => {
+    const config = makeConfig({
+      settings: { add_indexes: false, warn_missing_tables: false },
+    });
+    const findings = audit(basicSchema, config);
+    const missingIdx = findings.filter((f) => f.rule === "missing-index");
+    expect(missingIdx.length).toBeGreaterThan(0);
+  });
+
+  it("returns AuditFinding objects with severity, rule, message, and table", () => {
+    const findings = audit(basicSchema, makeConfig());
+    expect(findings.length).toBeGreaterThan(0);
+    const f = findings[0];
+    expect(f).toHaveProperty("severity");
+    expect(f).toHaveProperty("rule");
+    expect(f).toHaveProperty("message");
+    expect(f).toHaveProperty("table");
+  });
 });
