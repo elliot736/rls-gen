@@ -59,4 +59,26 @@ describe("audit", () => {
     const missing = findings.filter((f) => f.rule === "missing-from-config");
     expect(missing).toHaveLength(0);
   });
+
+  it("detects inconsistent tenant column names", () => {
+    const findings = audit(basicSchema, makeConfig());
+    const inconsistent = findings.filter((f) => f.rule === "inconsistent-tenant-column");
+    expect(inconsistent.length).toBeGreaterThan(0);
+    expect(inconsistent.some((f) => f.table === "audit_logs")).toBe(true);
+  });
+
+  it("warns about superuser bypass when force_rls_on_owner is false", () => {
+    const findings = audit(basicSchema, makeConfig());
+    const bypass = findings.filter((f) => f.rule === "superuser-bypass");
+    expect(bypass.length).toBeGreaterThan(0);
+  });
+
+  it("does not warn about superuser bypass when force_rls_on_owner is true", () => {
+    const config = makeConfig({
+      policies: { default_role: "app_user", force_rls_on_owner: true },
+    });
+    const findings = audit(basicSchema, config);
+    const bypass = findings.filter((f) => f.rule === "superuser-bypass");
+    expect(bypass).toHaveLength(0);
+  });
 });
