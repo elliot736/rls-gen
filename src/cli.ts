@@ -4,6 +4,33 @@ import { generate } from "./generator/generator.js";
 import { validate } from "./validator/validator.js";
 import { audit } from "./auditor/auditor.js";
 
+/** Parses CLI arguments and executes the appropriate subcommand. */
+export function run(argv: string[]): void {
+  const args = argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === "--help" || command === "-h") {
+    printUsage();
+    return;
+  }
+
+  switch (command) {
+    case "generate":
+      runGenerate(args.slice(1));
+      break;
+    case "validate":
+      runValidate(args.slice(1));
+      break;
+    case "audit":
+      runAudit(args.slice(1));
+      break;
+    default:
+      console.error(`Unknown command: ${command}`);
+      printUsage();
+      process.exit(1);
+  }
+}
+
 function getFlag(args: string[], flag: string): string | undefined {
   const idx = args.indexOf(flag);
   if (idx === -1 || idx + 1 >= args.length) return undefined;
@@ -76,4 +103,19 @@ function runAudit(args: string[]): void {
   if (findings.some((f) => f.severity === "error")) {
     process.exit(1);
   }
+}
+
+function printUsage(): void {
+  console.log(`
+rls-gen - PostgreSQL Row-Level Security Policy Generator
+
+Usage:
+  rls-gen generate --config <config.yaml>    Generate RLS SQL statements
+  rls-gen validate --config <config.yaml>    Validate config for errors
+  rls-gen audit --config <config.yaml> --schema <schema.sql>
+                                             Audit schema for RLS pitfalls
+
+Options:
+  --help, -h    Show this help message
+`);
 }
