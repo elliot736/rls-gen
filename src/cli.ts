@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parseConfigFromYaml } from "./config/config.js";
 import { generate } from "./generator/generator.js";
+import { validate } from "./validator/validator.js";
 
 function getFlag(args: string[], flag: string): string | undefined {
   const idx = args.indexOf(flag);
@@ -27,4 +28,24 @@ function runGenerate(args: string[]): void {
   const config = loadConfig(configPath);
   const statements = generate(config);
   console.log(statements.join("\n\n"));
+}
+
+function runValidate(args: string[]): void {
+  const configPath = requireFlag(args, "--config", "config");
+  const config = loadConfig(configPath);
+  const errors = validate(config);
+
+  if (errors.length === 0) {
+    console.log("Config is valid. No issues found.");
+    return;
+  }
+
+  for (const err of errors) {
+    const prefix = err.severity === "error" ? "ERROR" : "WARNING";
+    console.log(`[${prefix}] ${err.message}`);
+  }
+
+  if (errors.some((e) => e.severity === "error")) {
+    process.exit(1);
+  }
 }
