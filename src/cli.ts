@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { parseConfigFromYaml } from "./config/config.js";
+import { generate } from "./generator/generator.js";
 
 function getFlag(args: string[], flag: string): string | undefined {
   const idx = args.indexOf(flag);
@@ -19,4 +20,11 @@ function requireFlag(args: string[], flag: string, label: string): string {
     process.exit(1);
   }
   return value;
+}
+
+function runGenerate(args: string[]): void {
+  const configPath = requireFlag(args, "--config", "config");
+  const config = loadConfig(configPath);
+  const statements = generate(config);
+  console.log(statements.join("\n\n"));
 }
