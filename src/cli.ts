@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { parseConfigFromYaml } from "./config/config.js";
 import { generate } from "./generator/generator.js";
 import { validate } from "./validator/validator.js";
+import { audit } from "./auditor/auditor.js";
 
 function getFlag(args: string[], flag: string): string | undefined {
   const idx = args.indexOf(flag);
@@ -46,6 +47,33 @@ function runValidate(args: string[]): void {
   }
 
   if (errors.some((e) => e.severity === "error")) {
+    process.exit(1);
+  }
+}
+
+function runAudit(args: string[]): void {
+  const configPath = requireFlag(args, "--config", "config");
+  const schemaPath = requireFlag(args, "--schema", "schema");
+  const config = loadConfig(configPath);
+  const schemaSql = readFileSync(schemaPath, "utf-8");
+  const findings = audit(schemaSql, config);
+
+  if (findings.length === 0) {
+    console.log("Audit passed. No issues found.");
+    return;
+  }
+
+  for (const f of findings) {
+    const prefix =
+      f.severity === "error"
+        ? "ERROR"
+        : f.severity === "warning"
+          ? "WARNING"
+          : "INFO";
+    console.log(`[${prefix}] [${f.rule}] ${f.message}`);
+  }
+
+  if (findings.some((f) => f.severity === "error")) {
     process.exit(1);
   }
 }
