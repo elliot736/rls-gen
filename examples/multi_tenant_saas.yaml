@@ -1,0 +1,37 @@
+tenant:
+  column: tenant_id
+  type: uuid
+
+tables:
+  - name: users
+    schema: public
+    enable_rls: true
+
+  - name: orders
+    schema: public
+    enable_rls: true
+
+  - name: order_items
+    schema: public
+    enable_rls: true
+
+  - name: products
+    schema: public
+    enable_rls: true
+
+  - name: invoices
+    schema: billing
+    enable_rls: true
+
+  - name: audit_logs
+    schema: public
+    tenant_column: org_id
+    enable_rls: true
+
+policies:
+  default_role: app_user
+  force_rls_on_owner: true
+
+settings:
+  add_indexes: true
+  warn_missing_tables: true
