@@ -4,6 +4,9 @@
   "description": "PostgreSQL Row-Level Security Policy Generator for multi-tenant applications",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "rls-gen": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
