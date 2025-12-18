@@ -13,6 +13,13 @@
     "test:watch": "vitest",
     "lint": "tsc --noEmit"
   },
+  "keywords": [
+    "postgresql",
+    "rls",
+    "row-level-security",
+    "multi-tenant",
+    "policy-generator"
+  ],
   "license": "MIT",
   "dependencies": {
     "yaml": "^2.6.1"
