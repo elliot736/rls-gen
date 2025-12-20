@@ -1,0 +1,78 @@
+@startuml component-diagram
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+actor "User" as user
+
+package "rls-gen CLI" {
+  component "cli.ts" as cli {
+    portin "argv" as argv
+  }
+  note right of cli
+    Subcommands:
+    - generate --config
+    - validate --config
+    - audit --config --schema
+    Helpers: getFlag(), loadConfig(),
+    requireFlag(), printUsage()
+  end note
+}
+
+package "Core Modules" {
+  component "config" as config {
+    port "parseConfigFromYaml()" as parseCfg
+  }
+
+  component "generator" as generator {
+    port "generate()" as gen
+  }
+
+  component "validator" as validator {
+    port "validate()" as val
+  }
+
+  component "auditor" as auditor {
+    port "audit()" as aud
+  }
+}
+
+database "YAML Config\nFile" as yamlFile
+file "SQL Schema\nDump" as sqlFile
+file "SQL Output\n(stdout)" as sqlOut
+file "Validation\nResults (stdout)" as valOut
+file "Audit\nResults (stdout)" as audOut
+
+' -- User interaction --
+user --> argv : invokes
+
+' -- CLI reads files --
+cli --> yamlFile : reads (fs)
+cli --> sqlFile : reads (fs)\n[audit only]
+
+' -- CLI delegates to config for parsing --
+cli --> parseCfg : YAML string
+
+' -- Config returns TenantConfig to CLI --
+parseCfg --> cli : TenantConfig
+
+' -- CLI delegates to subcommand modules --
+cli --> gen : TenantConfig\n[generate]
+cli --> val : TenantConfig\n[validate]
+cli --> aud : TenantConfig +\nSQL string\n[audit]
+
+' -- Module outputs --
+gen --> sqlOut : string[]\n(SQL statements)
+val --> valOut : ValidationError[]
+aud --> audOut : AuditFinding[]
+
+' -- Data flow legend --
+legend bottom
+  |= Arrow |= Meaning |
+  | --> | Data flow / invocation |
+  | YAML Config File | Input: tenant RLS config (YAML) |
+  | SQL Schema Dump | Input: pg_dump output for audit |
+  | SQL Output | Output: ALTER TABLE, CREATE POLICY, CREATE INDEX |
+endlegend
+
+@enduml
