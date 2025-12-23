@@ -140,3 +140,41 @@ After that, every query on that connection is automatically scoped. No more forg
 | `settings.add_indexes`         | no       | `false`                  | Generate `CREATE INDEX` for tenant columns            |
 | `settings.warn_missing_tables` | no       | `false`                  | Flag schema tables missing from config during audit   |
 
+## Architecture
+
+```
+src/
+├── config/       # YAML parsing, defaults, config validation
+├── generator/    # SQL statement generation from config
+├── validator/    # Config correctness checks (pre-generation)
+├── auditor/      # Schema-vs-config gap detection (post-generation)
+└── cli.ts        # Three commands: generate, validate, audit
+```
+
+Intentional design choices:
+
+- **Validator vs Auditor are separate concerns.** Validation checks your config in isolation (is it well-formed?). Auditing compares your config against a live schema dump (is it complete?). You can validate without a database, but you need a schema dump to audit.
+- **Regex-based schema parsing.** The auditor parses `CREATE TABLE` statements with targeted regexes against `pg_dump` output. A full SQL parser would be more robust but adds a heavy dependency for something that runs against a predictable format.
+- **Single runtime dependency** (`yaml`). Everything else is standard library. The CLI is hand-rolled from `process.argv` — no framework overhead for three simple commands.
+
+See [docs/adr/](docs/adr/) for the full decision records.
+
+## Development
+
+```bash
+git clone https://github.com/elliot736/rls-gen.git
+cd rls-gen
+npm install
+npm test        # 42 tests across 4 suites
+npm run build
+```
+
+Tests are written first (spec-driven), table-driven, and cover every module independently. No database required to run them.
+
+## Contributing
+
+Open an issue first if you're planning something non-trivial. PRs should include tests — write them before the implementation.
+
+## License
+
+MIT
