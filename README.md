@@ -73,3 +73,31 @@ CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON public.users(tenant_id);
 ```
 
 Pipe it into your migration tool, review it, apply it. The output is plain SQL — no lock-in.
+
+### 3. Validate your config
+
+```bash
+rls-gen validate --config rls.yaml
+```
+
+Catches issues before you generate anything:
+
+- Invalid column types (only `uuid`, `integer`, `bigint`, `text`)
+- Duplicate table entries
+- Missing required fields
+- Tables with RLS disabled (warns you in case it's unintentional)
+
+### 4. Audit your schema
+
+```bash
+pg_dump --schema-only mydb > schema.sql
+rls-gen audit --config rls.yaml --schema schema.sql
+```
+
+```
+[WARNING] missing-from-config    Table 'public.sessions' exists in schema but is not in the RLS config
+[WARNING] inconsistent-tenant-column  Table 'audit_logs' uses 'org_id' instead of the default 'tenant_id'
+[WARNING] missing-index           Table 'public.orders' has no index on tenant column 'tenant_id'
+```
+
+This is the command you run in CI after every migration. New table without RLS coverage? You'll know before it hits production.
