@@ -101,3 +101,42 @@ rls-gen audit --config rls.yaml --schema schema.sql
 ```
 
 This is the command you run in CI after every migration. New table without RLS coverage? You'll know before it hits production.
+
+## How RLS works with your app
+
+For the generated policies to take effect, your app needs to set the current tenant on each connection:
+
+```sql
+SET app.current_tenant = 'a]1b2c3d4-...';
+```
+
+Most connection pools support a setup hook for this. In Node with `pg`:
+
+```typescript
+const pool = new Pool({
+  // ...
+});
+
+// set tenant context when acquiring a connection
+pool.on("connect", (client) => {
+  client.query(`SET app.current_tenant = '${tenantId}'`);
+});
+```
+
+After that, every query on that connection is automatically scoped. No more forgotten WHERE clauses.
+
+## Config reference
+
+| Field                          | Required | Default                  | Description                                           |
+| ------------------------------ | -------- | ------------------------ | ----------------------------------------------------- |
+| `tenant.column`                | yes      | —                        | Default tenant column name across tables              |
+| `tenant.type`                  | yes      | —                        | PostgreSQL type (`uuid`, `integer`, `bigint`, `text`) |
+| `tables[].name`                | yes      | —                        | Table name                                            |
+| `tables[].schema`              | no       | `public`                 | PostgreSQL schema                                     |
+| `tables[].tenant_column`       | no       | inherits `tenant.column` | Override tenant column for this table                 |
+| `tables[].enable_rls`          | yes      | —                        | Whether to generate RLS for this table                |
+| `policies.default_role`        | no       | `app_user`               | PostgreSQL role the policy applies to                 |
+| `policies.force_rls_on_owner`  | no       | `false`                  | Also enforce RLS on table owners                      |
+| `settings.add_indexes`         | no       | `false`                  | Generate `CREATE INDEX` for tenant columns            |
+| `settings.warn_missing_tables` | no       | `false`                  | Flag schema tables missing from config during audit   |
+
