@@ -134,7 +134,7 @@ After that, every query on that connection is automatically scoped. No more forg
 | `tables[].name`                | yes      | —                        | Table name                                            |
 | `tables[].schema`              | no       | `public`                 | PostgreSQL schema                                     |
 | `tables[].tenant_column`       | no       | inherits `tenant.column` | Override tenant column for this table                 |
-| `tables[].enable_rls`          | yes      | —                        | Whether to generate RLS for this table                |
+| `tables[].enable_rls`          | no       | `true`                   | Whether to generate RLS for this table                |
 | `policies.default_role`        | no       | `app_user`               | PostgreSQL role the policy applies to                 |
 | `policies.force_rls_on_owner`  | no       | `false`                  | Also enforce RLS on table owners                      |
 | `settings.add_indexes`         | no       | `false`                  | Generate `CREATE INDEX` for tenant columns            |
