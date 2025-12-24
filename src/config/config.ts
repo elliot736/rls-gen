@@ -48,7 +48,7 @@ export function parseConfig(raw: Record<string, unknown>): TenantConfig {
   }
 
   if (!raw.tables || !Array.isArray(raw.tables) || raw.tables.length === 0) {
-    throw new Error("Missing or empty 'tables' section in config");
+    throw new Error("Config must include at least one table in the 'tables' array");
   }
 
   const tables: TableConfig[] = (raw.tables as Record<string, unknown>[]).map(
