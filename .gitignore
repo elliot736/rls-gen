@@ -5,3 +5,4 @@ dist/
 *.js.map
 !vitest.config.ts
 .DS_Store
+.env
