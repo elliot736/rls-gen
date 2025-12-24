@@ -35,7 +35,7 @@ export function generate(config: TenantConfig): string[] {
       `CREATE POLICY tenant_isolation_${table.name} ON ${qualifiedName} TO ${config.policies.default_role} USING (${tenantCol} = current_setting('app.current_tenant')::${config.tenant.type});`
     );
 
-    // 4. Create index (optional)
+    // 4. Create index on tenant column (optional, improves query performance)
     if (config.settings.add_indexes) {
       statements.push(
         `CREATE INDEX IF NOT EXISTS idx_${table.name}_${tenantCol} ON ${qualifiedName}(${tenantCol});`
