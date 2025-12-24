@@ -27,7 +27,7 @@ export function validate(config: TenantConfig): ValidationError[] {
   if (!config.policies.default_role) {
     errors.push({
       severity: "error",
-      message: "Policy default_role must not be empty",
+      message: "policies.default_role must not be empty",
     });
   }
 
