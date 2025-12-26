@@ -153,6 +153,7 @@ tables:
   });
 });
 
+// JSON/object input parsing
 describe("parseConfig", () => {
   it("parses a JSON object input", () => {
     const input = {
