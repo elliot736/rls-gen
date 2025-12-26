@@ -107,7 +107,7 @@ function runAudit(args: string[]): void {
 
 function printUsage(): void {
   console.log(`
-rls-gen - PostgreSQL Row-Level Security Policy Generator
+rls-gen — PostgreSQL Row-Level Security Policy Generator
 
 Usage:
   rls-gen generate --config <config.yaml>    Generate RLS SQL statements
