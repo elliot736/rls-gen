@@ -17,7 +17,7 @@ The regexes are designed to handle common pg_dump output patterns including `IF 
 ## Consequences
 **Positive:** Zero additional dependencies. The parsing code is under 50 lines, easy to read, and easy to test. It handles the specific subset of SQL that pg_dump produces, which is highly regular and predictable. The auditor runs instantly even on large schema files since regex matching is fast.
 
-**Negative:** The regexes will not handle every valid SQL syntax -- nested parentheses in column defaults, dollar-quoted strings in CHECK constraints, or unconventional formatting could cause mis-parses. The approach is brittle if users provide hand-written SQL rather than pg_dump output. Edge cases (e.g., column names that are SQL keywords, quoted identifiers) are not handled.
+**Negative:** The regexes will not handle every valid SQL syntax -- nested parentheses in column defaults, dollar-quoted strings in CHECK constraints, or unconventional formatting could cause mis-parses. The approach is brittle if users provide hand-written SQL rather than pg_dump output. Edge cases (e.g., column names that are SQL keywords, quoted identifiers) are not handled. This trade-off is acceptable because pg_dump output follows a consistent format.
 
 ## Alternatives Considered
 **`pg-query-parser` / `libpg_query` bindings:** These use PostgreSQL's actual parser and would handle all valid SQL correctly. However, they add a native dependency (C library binding), complicating installation on different platforms. This is heavy for a tool that only needs table and column names from pg_dump output.
