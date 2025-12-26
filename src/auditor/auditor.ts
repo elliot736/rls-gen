@@ -79,7 +79,7 @@ export function audit(schemaSql: string, config: TenantConfig): AuditFinding[] {
   const schemaTables = parseTables(schemaSql);
   const existingIndexes = parseIndexes(schemaSql);
 
-  // Build a set of configured table keys
+  // Build a lookup set of configured table keys for O(1) membership checks
   const configuredKeys = new Set(
     config.tables.map((t) => `${t.schema}.${t.name}`)
   );
