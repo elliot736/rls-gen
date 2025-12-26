@@ -15,7 +15,7 @@ const VALID_TENANT_TYPES = new Set(["uuid", "integer", "bigint", "text"]);
 export function validate(config: TenantConfig): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  // Check tenant column type
+  // Validate tenant column type against PostgreSQL-supported types
   if (!VALID_TENANT_TYPES.has(config.tenant.type)) {
     errors.push({
       severity: "error",
