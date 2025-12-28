@@ -112,7 +112,7 @@ export function audit(schemaSql: string, config: TenantConfig): AuditFinding[] {
     }
   }
 
-  // 3. Superuser bypass warning
+  // 3. Superuser bypass warning — table owners can see all rows without FORCE RLS
   if (!config.policies.force_rls_on_owner) {
     findings.push({
       severity: "warning",
