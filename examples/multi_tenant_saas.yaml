@@ -1,3 +1,4 @@
+# Example: Multi-tenant SaaS application with billing schema
 tenant:
   column: tenant_id
   type: uuid
