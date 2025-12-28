@@ -42,6 +42,7 @@ function makeConfig(overrides: Partial<TenantConfig> = {}): TenantConfig {
   };
 }
 
+// Schema audit tests — uses inline SQL fixtures for predictable pg_dump output
 describe("audit", () => {
   it("detects tables in schema not present in config", () => {
     const findings = audit(basicSchema, makeConfig());
