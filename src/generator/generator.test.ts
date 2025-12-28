@@ -14,6 +14,7 @@ function makeConfig(overrides: Partial<TenantConfig> = {}): TenantConfig {
   };
 }
 
+// SQL generation tests — each test uses makeConfig() with targeted overrides
 describe("generate", () => {
   it("generates ENABLE RLS for a single table", () => {
     const sql = generate(makeConfig());
