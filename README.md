@@ -107,7 +107,7 @@ This is the command you run in CI after every migration. New table without RLS c
 For the generated policies to take effect, your app needs to set the current tenant on each connection:
 
 ```sql
-SET app.current_tenant = 'a]1b2c3d4-...';
+SET app.current_tenant = 'a1b2c3d4-...';
 ```
 
 Most connection pools support a setup hook for this. In Node with `pg`:
