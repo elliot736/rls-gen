@@ -35,6 +35,7 @@ tables:
     enable_rls: true
 `;
 
+// YAML config parsing tests — validates required fields, defaults, and error handling
 describe("parseConfigFromYaml", () => {
   it("parses a complete valid YAML config", () => {
     const config = parseConfigFromYaml(validYaml);
