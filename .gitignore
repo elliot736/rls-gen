@@ -6,3 +6,4 @@ dist/
 !vitest.config.ts
 .DS_Store
 .env
+coverage/
