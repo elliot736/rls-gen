@@ -25,7 +25,7 @@ export function run(argv: string[]): void {
       runAudit(args.slice(1));
       break;
     default:
-      console.error(`Unknown command: ${command}`);
+      console.error(`Unknown command: ${command}. Run rls-gen --help for usage.`);
       printUsage();
       process.exit(1);
   }
