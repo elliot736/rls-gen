@@ -18,7 +18,7 @@ export function generate(config: TenantConfig): string[] {
     const qualifiedName = `${table.schema}.${table.name}`;
     const tenantCol = table.tenant_column ?? config.tenant.column;
 
-    // 1. Enable RLS
+    // 1. Enable RLS on the table
     statements.push(
       `ALTER TABLE ${qualifiedName} ENABLE ROW LEVEL SECURITY;`
     );
