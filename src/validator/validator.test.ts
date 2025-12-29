@@ -14,6 +14,7 @@ function makeConfig(overrides: Partial<TenantConfig> = {}): TenantConfig {
   };
 }
 
+// Config validation tests — checks types, duplicates, and role constraints
 describe("validate", () => {
   it("returns no errors for a valid config", () => {
     const errors = validate(makeConfig());
