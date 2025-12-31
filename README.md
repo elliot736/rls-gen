@@ -169,7 +169,7 @@ npm test        # 42 specs across 4 modules
 npm run build
 ```
 
-Tests are written first (spec-driven), table-driven, and cover every module independently. No database required to run them.
+Tests are spec-driven and table-driven, covering every module independently. No database required to run them.
 
 ## Contributing
 
