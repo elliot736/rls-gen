@@ -1,14 +1,44 @@
-# rls-gen
+<p align="center">
+<h1 align="center">rls-gen</h1>
+<p align="center">Generate PostgreSQL Row-Level Security policies from config.<br/>Stop scattering <code>WHERE tenant_id = ?</code> across your codebase.</p>
+</p>
 
-Generate PostgreSQL Row-Level Security policies from a simple config file. Stop relying on `WHERE tenant_id = ?` scattered across your codebase and start enforcing tenant isolation where it actually matters — at the database level.
+<p align="center">
+  <a href="#the-problem">The Problem</a> &middot;
+  <a href="#install">Install</a> &middot;
+  <a href="#usage">Usage</a> &middot;
+  <a href="#how-rls-works-with-your-app">How RLS Works</a> &middot;
+  <a href="#config-reference">Config Reference</a> &middot;
+  <a href="#architecture">Architecture</a> &middot;
+  <a href="#development">Development</a>
+</p>
 
-## The problem
+## Table of Contents
 
-Every multi-tenant app starts the same way: you add `tenant_id` to your tables and make sure every query filters by it. Then someone forgets. Or a new hire writes a reporting query without the filter. Or an ORM-generated join leaks rows. I've seen this happen across teams at different scales — 50 tenants, 5,000 tenants, doesn't matter. The bug is always the same: one tenant sees another tenant's data.
+- [The Problem](#the-problem)
+- [Install](#install)
+- [Usage](#usage)
+  - [Define Config](#1-define-your-tenant-model)
+  - [Generate SQL](#2-generate-sql)
+  - [Validate](#3-validate-your-config)
+  - [Audit](#4-audit-your-schema)
+- [How RLS Works With Your App](#how-rls-works-with-your-app)
+- [Config Reference](#config-reference)
+- [Architecture](#architecture)
+- [Development](#development)
+- [License](#license)
 
-PostgreSQL's Row-Level Security fixes this at the right layer. But setting it up correctly is tedious and error-prone: you need to enable RLS on every table, write policies, remember `FORCE ROW LEVEL SECURITY` so table owners don't bypass it, add indexes so filtered queries don't tank performance, and keep all of this in sync as your schema evolves.
+---
+
+## The Problem
+
+Every multi-tenant app starts the same way: add `tenant_id` to your tables, filter every query by it. Then someone forgets. A new hire writes a reporting query without the filter. An ORM-generated join leaks rows. Whether you have 50 tenants or 5,000, the bug is always the same: one tenant sees another tenant's data.
+
+PostgreSQL's Row-Level Security fixes this at the right layer. But setting it up correctly is tedious and error-prone. You need to enable RLS on every table, write policies, remember `FORCE ROW LEVEL SECURITY` so table owners don't bypass it, add indexes so filtered queries stay fast, and keep all of this in sync as your schema evolves.
 
 `rls-gen` takes a YAML config describing your tenant model and generates all the SQL you need. It also audits your existing schema to catch tables you forgot to cover.
+
+---
 
 ## Install
 
@@ -21,6 +51,8 @@ Or run directly:
 ```bash
 npx rls-gen generate --config rls.yaml
 ```
+
+---
 
 ## Usage
 
@@ -72,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON public.users(tenant_id);
 -- ... repeated for each table
 ```
 
-Pipe it into your migration tool, review it, apply it. The output is plain SQL — no lock-in.
+Pipe it into your migration tool, review it, apply it. The output is plain SQL, no lock-in.
 
 ### 3. Validate your config
 
@@ -100,9 +132,11 @@ rls-gen audit --config rls.yaml --schema schema.sql
 [WARNING] missing-index           Table 'public.orders' has no index on tenant column 'tenant_id'
 ```
 
-This is the command you run in CI after every migration. New table without RLS coverage? You'll know before it hits production.
+Run this in CI after every migration. New table without RLS coverage? You'll know before it hits production.
 
-## How RLS works with your app
+---
+
+## How RLS Works With Your App
 
 For the generated policies to take effect, your app needs to set the current tenant on each connection:
 
@@ -125,13 +159,15 @@ pool.on("connect", (client) => {
 
 After that, every query on that connection is automatically scoped. No more forgotten WHERE clauses.
 
-## Config reference
+---
+
+## Config Reference
 
 | Field                          | Required | Default                  | Description                                           |
 | ------------------------------ | -------- | ------------------------ | ----------------------------------------------------- |
-| `tenant.column`                | yes      | —                        | Default tenant column name across tables              |
-| `tenant.type`                  | yes      | —                        | PostgreSQL type (`uuid`, `integer`, `bigint`, `text`) |
-| `tables[].name`                | yes      | —                        | Table name                                            |
+| `tenant.column`                | yes      | n/a                      | Default tenant column name across tables              |
+| `tenant.type`                  | yes      | n/a                      | PostgreSQL type (`uuid`, `integer`, `bigint`, `text`) |
+| `tables[].name`                | yes      | n/a                      | Table name                                            |
 | `tables[].schema`              | no       | `public`                 | PostgreSQL schema                                     |
 | `tables[].tenant_column`       | no       | inherits `tenant.column` | Override tenant column for this table                 |
 | `tables[].enable_rls`          | no       | `true`                   | Whether to generate RLS for this table                |
@@ -139,6 +175,8 @@ After that, every query on that connection is automatically scoped. No more forg
 | `policies.force_rls_on_owner`  | no       | `false`                  | Also enforce RLS on table owners                      |
 | `settings.add_indexes`         | no       | `false`                  | Generate `CREATE INDEX` for tenant columns            |
 | `settings.warn_missing_tables` | no       | `false`                  | Flag schema tables missing from config during audit   |
+
+---
 
 ## Architecture
 
@@ -159,13 +197,15 @@ src/
 
 ![Component Diagram](docs/component-diagram.png)
 
-Intentional design choices:
+**Design decisions:**
 
-- **Validator vs Auditor are separate concerns.** Validation checks your config in isolation (is it well-formed?). Auditing compares your config against a live schema dump (is it complete?). You can validate without a database, but you need a schema dump to audit.
+- **Validator and Auditor are separate concerns.** Validation checks your config in isolation (is it well-formed?). Auditing compares your config against a live schema dump (is it complete?). You can validate without a database, but you need a schema dump to audit.
 - **Regex-based schema parsing.** The auditor parses `CREATE TABLE` statements with targeted regexes against `pg_dump` output. A full SQL parser would be more robust but adds a heavy dependency for something that runs against a predictable format.
-- **Single runtime dependency** (`yaml`). Everything else is standard library. The CLI is hand-rolled from `process.argv` — no framework overhead for three simple commands.
+- **Single runtime dependency** (`yaml`). Everything else is standard library. The CLI is hand-rolled from `process.argv`, no framework overhead for three simple commands.
 
 See [docs/adr/](docs/adr/) for the full decision records.
+
+---
 
 ## Development
 
@@ -179,9 +219,9 @@ npm run build
 
 Tests are spec-driven and table-driven, covering every module independently. No database required to run them.
 
-## Contributing
+Open an issue first if you're planning something non-trivial. Small fixes and typo corrections are welcome as direct PRs. PRs should include tests.
 
-Open an issue first if you're planning something non-trivial. Small fixes and typo corrections are welcome as direct PRs. PRs should include tests — write them before the implementation.
+---
 
 ## License
 
