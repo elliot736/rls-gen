@@ -43,13 +43,13 @@ PostgreSQL's Row-Level Security fixes this at the right layer. But setting it up
 ## Install
 
 ```bash
-npm install -g rls-gen
+npm install -g github:elliot736/rls-gen
 ```
 
 Or run directly:
 
 ```bash
-npx rls-gen generate --config rls.yaml
+npx github:elliot736/rls-gen generate --config rls.yaml
 ```
 
 ---
