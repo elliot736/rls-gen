@@ -173,7 +173,7 @@ Tests are written first (spec-driven), table-driven, and cover every module inde
 
 ## Contributing
 
-Open an issue first if you're planning something non-trivial. PRs should include tests — write them before the implementation.
+Open an issue first if you're planning something non-trivial. Small fixes and typo corrections are welcome as direct PRs. PRs should include tests — write them before the implementation.
 
 ## License
 
