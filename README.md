@@ -165,7 +165,7 @@ See [docs/adr/](docs/adr/) for the full decision records.
 git clone https://github.com/elliot736/rls-gen.git
 cd rls-gen
 npm install
-npm test        # 42 tests across 4 suites
+npm test        # 42 specs across 4 modules
 npm run build
 ```
 
