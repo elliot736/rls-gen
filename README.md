@@ -5,6 +5,7 @@
 
 <p align="center">
   <a href="#the-problem">The Problem</a> &middot;
+  <a href="#features">Features</a> &middot;
   <a href="#install">Install</a> &middot;
   <a href="#usage">Usage</a> &middot;
   <a href="#how-rls-works-with-your-app">How RLS Works</a> &middot;
@@ -16,6 +17,7 @@
 ## Table of Contents
 
 - [The Problem](#the-problem)
+- [Features](#features)
 - [Install](#install)
 - [Usage](#usage)
   - [Define Config](#1-define-your-tenant-model)
@@ -32,11 +34,22 @@
 
 ## The Problem
 
-Every multi-tenant app starts the same way: add `tenant_id` to your tables, filter every query by it. Then someone forgets. A new hire writes a reporting query without the filter. An ORM-generated join leaks rows. Whether you have 50 tenants or 5,000, the bug is always the same: one tenant sees another tenant's data.
+Every multi-tenant app starts with `WHERE tenant_id = ?`. It works until someone forgets it. A new hire writes a reporting query without the filter. An ORM-generated join leaks rows. A background job runs without tenant context. The bug is always the same: one tenant sees another tenant's data.
 
-PostgreSQL's Row-Level Security fixes this at the right layer. But setting it up correctly is tedious and error-prone. You need to enable RLS on every table, write policies, remember `FORCE ROW LEVEL SECURITY` so table owners don't bypass it, add indexes so filtered queries stay fast, and keep all of this in sync as your schema evolves.
+PostgreSQL's Row-Level Security fixes this at the right layer. The database enforces tenant isolation regardless of what the application code does. But setting it up correctly is tedious. You need to enable RLS on every table, write a policy for each one, remember `FORCE ROW LEVEL SECURITY` so table owners don't bypass it, add indexes so filtered queries stay fast, and keep all of this in sync as your schema evolves. Miss one table and you have a gap. Forget `FORCE` and your migration user can read everything.
 
-`rls-gen` takes a YAML config describing your tenant model and generates all the SQL you need. It also audits your existing schema to catch tables you forgot to cover.
+`rls-gen` automates all of this from a single YAML config. Define your tenant model once, generate the SQL, and audit your schema for gaps before they reach production.
+
+---
+
+## Features
+
+- **YAML-driven SQL generation.** Define your tenant model once. Generate all the RLS statements, FORCE policies, and indexes.
+- **Config validation.** Catches invalid column types, duplicate tables, empty roles, and disabled-RLS warnings before you generate anything.
+- **Schema auditing.** Compares your RLS config against a `pg_dump` output. Finds tables without coverage, missing indexes, inconsistent column names, and superuser bypass gaps.
+- **Single runtime dependency.** Only the `yaml` package. No ORM, no database connection, no framework.
+- **Plain SQL output.** The generated SQL pipes directly into your migration tool. No lock-in, no custom format.
+- **CI-ready.** Run `rls-gen audit` in your pipeline after every migration. New table without RLS coverage? The build fails before it reaches production.
 
 ---
 
