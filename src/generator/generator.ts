@@ -30,7 +30,7 @@ export function generate(config: TenantConfig): string[] {
       );
     }
 
-    // 3. Create policy
+    // 3. Create tenant isolation policy using current_setting()
     statements.push(
       `CREATE POLICY tenant_isolation_${table.name} ON ${qualifiedName} TO ${config.policies.default_role} USING (${tenantCol} = current_setting('app.current_tenant')::${config.tenant.type});`
     );
